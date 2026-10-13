@@ -1,0 +1,5 @@
+-r src/requirements.txt
+pytest
+httpx
+boto3
+moto[dynamodb]

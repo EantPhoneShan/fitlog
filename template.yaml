@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: FitLog - fitness tracker web app with accounts (Lambda + DynamoDB, free tier)
+
+Parameters:
+  SecretKey:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: Long random text used to sign log-in tokens. Make one with  python -c "import secrets; print(secrets.token_hex(32))"
+  SignupCode:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: Invite code people need to create an account. Leave empty to let anyone sign up (when you publish).
+  AlertEmail:
+    Type: String
+    Description: Email that gets a warning if AWS charges go above 1 USD in a month
+
+Resources:
+  # The database: one item per day, key = user + date
+  DaysTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: fitlog-days
+      AttributeDefinitions:
+        - { AttributeName: user, AttributeType: S }
+        - { AttributeName: date, AttributeType: S }
+      KeySchema:
+        - { AttributeName: user, KeyType: HASH }
+        - { AttributeName: date, KeyType: RANGE }
+      # Tiny fixed capacity stays inside DynamoDB's always-free 25 read / 25 write units
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+
+  # Accounts: one item per user, key = email
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: fitlog-users
+      AttributeDefinitions:
+        - { AttributeName: email, AttributeType: S }
+      KeySchema:
+        - { AttributeName: email, KeyType: HASH }
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+
+  # The backend + web page: one Python function with its own public URL
+  FitLogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fitlog
+      CodeUri: src/
+      Handler: app.main.handler
+      Runtime: python3.13
+      MemorySize: 512
+      Timeout: 15
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref DaysTable
+          USERS_TABLE: !Ref UsersTable
+          SECRET_KEY: !Ref SecretKey
+          SIGNUP_CODE: !Ref SignupCode
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DaysTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      FunctionUrlConfig:
+        AuthType: NONE
+
+  # Safety net: emails you before a surprise bill
+  CostAlarm:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: fitlog-1-usd
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: 1, Unit: USD }
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 50
+          Subscribers:
+            - { SubscriptionType: EMAIL, Address: !Ref AlertEmail }
+
+Outputs:
+  AppUrl:
+    Description: Open this link on your phone or computer, then install it from the Me tab
+    Value: !GetAtt FitLogFunctionUrl.FunctionUrl

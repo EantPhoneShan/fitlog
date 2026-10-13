@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0f12">
+  <meta name="description" content="Track workouts, weight, protein, water, steps and sleep. Free fitness log that works on phone and computer.">
+  <title>FitLog</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitLog">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ================= SIGN IN / SIGN UP ================= -->
+  <section id="auth" class="auth" hidden>
+    <div class="auth-card">
+      <div class="brand big"><span class="logo">F</span>FitLog</div>
+      <p class="auth-tag">Your workouts, weight, protein, water, steps and sleep in one place. Free, on your phone and computer.</p>
+      <div class="seg auth-seg">
+        <button type="button" data-mode="login" class="on">Log in</button>
+        <button type="button" data-mode="signup">Create account</button>
+      </div>
+      <form id="authForm" class="form" autocomplete="on">
+        <label class="signup-only"><em class="lt">Name</em><input name="name" autocomplete="name" maxlength="40" placeholder="Adam"></label>
+        <label><em class="lt">Email</em><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+        <label><em class="lt">Password <span class="signup-only">at least 8 characters</span></em>
+          <input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
+        <label class="signup-only" id="codeField" hidden><em class="lt">Invite code <span>ask the app owner</span></em><input name="code" autocomplete="off"></label>
+        <p class="auth-error" id="authError"></p>
+        <button type="submit" class="primary full" id="authSubmit">Log in</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= APP ================= -->
+  <div id="app" hidden>
+    <header class="top">
+      <div class="brand"><span class="logo">F</span>FitLog</div>
+      <div class="datenav" id="datenav">
+        <button id="prev" aria-label="Previous day">&#8249;</button>
+        <label class="datepick"><span id="dateLabel"></span><input type="date" id="dateInput" aria-label="Pick a date"></label>
+        <button id="next" aria-label="Next day">&#8250;</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- TODAY -->
+      <section id="view-today" class="view active">
+        <div class="col-a">
+          <p class="hello" id="hello"></p>
+          <article class="card hero" id="workoutCard">
+            <div class="hero-head">
+              <div>
+                <p class="eyebrow" id="workoutDay"></p>
+                <h1 id="workoutName"></h1>
+              </div>
+              <span class="pill" id="workoutMins"></span>
+            </div>
+            <ol id="workoutList" class="exlist"></ol>
+            <div class="chips" id="workoutChips"></div>
+          </article>
+
+          <div class="stats">
+            <div class="stat"><span class="stat-val" id="sAvg">–</span><span class="stat-lbl">7-day avg kg</span></div>
+            <div class="stat"><span class="stat-val" id="sChange">–</span><span class="stat-lbl">vs last week</span></div>
+            <div class="stat"><span class="stat-val" id="sStreak">0</span><span class="stat-lbl">day streak</span></div>
+            <div class="stat"><span class="stat-val" id="sSessions">0</span><span class="stat-lbl">sessions this wk</span></div>
+          </div>
+
+          <p class="advice" id="advice"></p>
+          <div class="rings" id="rings"></div>
+        </div>
+
+        <form class="card form col-b" id="dayForm" autocomplete="off">
+          <div class="form-head">
+            <h2>Daily log</h2>
+            <span class="saved" id="saved"></span>
+          </div>
+          <div class="grid">
+            <label><em class="lt">Weight <span>kg</span></em><input name="weight" type="number" step="0.1" inputmode="decimal" placeholder="–"></label>
+            <label><em class="lt">Waist <span>cm · weekly</span></em><input name="waist" type="number" step="0.5" inputmode="decimal" placeholder="–"></label>
+            <label><em class="lt">Protein <span>g</span></em><input name="protein" type="number" inputmode="numeric" placeholder="0"></label>
+            <label><em class="lt">Water <span>L</span></em><input name="water" type="number" step="0.25" inputmode="decimal" placeholder="0"></label>
+            <label><em class="lt">Steps</em><input name="steps" type="number" inputmode="numeric" placeholder="0"></label>
+            <label><em class="lt">Sleep <span>h</span></em><input name="sleep" type="number" step="0.25" inputmode="decimal" placeholder="0"></label>
+          </div>
+          <label class="wide"><em class="lt">Workout</em>
+            <select name="workout" id="workoutSelect"></select>
+          </label>
+          <label class="wide"><em class="lt">Lifts <span>exercise, weight × reps</span></em>
+            <textarea name="lifts" rows="3" placeholder="Incline DB press 20 kg × 10, 9, 8"></textarea>
+          </label>
+          <label class="wide"><em class="lt">Note</em>
+            <textarea name="note" rows="2" placeholder="How did today feel?"></textarea>
+          </label>
+          <div class="form-actions">
+            <button type="button" class="ghost danger" id="clearDay">Clear day</button>
+            <button type="submit" class="primary">Save</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="view-history" class="view">
+        <article class="card">
+          <div class="form-head">
+            <h2>Weight trend</h2>
+            <div class="seg" id="range">
+              <button data-days="14">2W</button><button data-days="30" class="on">1M</button><button data-days="90">3M</button>
+            </div>
+          </div>
+          <div id="chart" class="chart"></div>
+          <div class="legend"><span class="dot dot-day"></span>Daily <span class="dot dot-avg"></span>7-day average</div>
+        </article>
+        <div id="historyList" class="hlist"></div>
+      </section>
+
+      <!-- PLAN -->
+      <section id="view-plan" class="view">
+        <div class="plan-head">
+          <h2 class="page-title">Your plan</h2>
+          <button type="button" class="ghost-btn" id="editPlan">Edit plan</button>
+        </div>
+        <div id="planView" class="stack">
+          <article class="card"><h2>Daily targets</h2><div class="targets" id="targets"></div></article>
+          <article class="card"><h2>Weekly split</h2><div id="split" class="split"></div></article>
+          <article class="card"><h2>Menu</h2><div id="menu" class="menu"></div></article>
+          <article class="card"><h2>Rules</h2><ul id="rules" class="rules"></ul></article>
+        </div>
+        <form id="planEdit" class="stack" hidden>
+          <article class="card">
+            <h2>Daily targets</h2>
+            <div class="grid" id="targetInputs">
+              <label><em class="lt">Calories <span>kcal</span></em><input name="calories" type="number" min="800" max="6000" required></label>
+              <label><em class="lt">Protein <span>g</span></em><input name="protein" type="number" min="0" max="400" required></label>
+              <label><em class="lt">Water <span>L</span></em><input name="water" type="number" step="0.25" min="0.5" max="10" required></label>
+              <label><em class="lt">Steps</em><input name="steps" type="number" min="0" max="50000" step="500" required></label>
+              <label><em class="lt">Sleep <span>h</span></em><input name="sleep" type="number" step="0.25" min="3" max="14" required></label>
+            </div>
+          </article>
+          <article class="card">
+            <h2>Weekly split</h2>
+            <p class="hint">Name each day (call a day "Rest" for a rest day). One exercise per line.</p>
+            <div id="splitInputs" class="split-edit"></div>
+          </article>
+          <article class="card">
+            <h2>Menu</h2>
+            <div id="menuInputs" class="menu-edit"></div>
+            <button type="button" class="ghost-btn" id="addMeal">+ Add meal</button>
+          </article>
+          <div class="form-actions sticky-actions">
+            <button type="button" class="ghost" id="cancelPlan">Cancel</button>
+            <button type="submit" class="primary">Save plan</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ME -->
+      <section id="view-me" class="view">
+        <article class="card me-card">
+          <div class="avatar" id="avatar"></div>
+          <div>
+            <h2 id="meName"></h2>
+            <p class="muted" id="meEmail"></p>
+          </div>
+        </article>
+
+        <form class="card form" id="nameForm">
+          <h2>Profile</h2>
+          <label><em class="lt">Name</em><input name="name" maxlength="40" required></label>
+          <div class="form-actions"><span></span><button type="submit" class="primary">Save</button></div>
+        </form>
+
+        <article class="card">
+          <h2>Install the app</h2>
+          <div id="installBox" class="install">
+            <button type="button" class="primary" id="installBtn" hidden>Install FitLog</button>
+            <ul class="rules">
+              <li><b>Android (Chrome):</b> menu ⋮ → <i>Add to Home screen</i> / <i>Install app</i></li>
+              <li><b>iPhone (Safari):</b> Share button → <i>Add to Home Screen</i></li>
+              <li><b>Computer (Chrome / Edge):</b> install icon at the right end of the address bar</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card backup">
+          <div>
+            <h2>Backup</h2>
+            <p class="muted">Download all your records as one file. Keep it in Google Drive, or use it to move your log to another FitLog (laptop ↔ cloud).</p>
+          </div>
+          <div class="backup-actions">
+            <button type="button" class="primary" id="exportBtn">Download backup</button>
+            <label class="ghost-btn">Restore from file<input type="file" id="importFile" accept=".json,application/json" hidden></label>
+          </div>
+        </article>
+
+        <article class="card account-actions">
+          <button type="button" class="ghost-btn" id="logoutBtn">Log out</button>
+          <button type="button" class="ghost danger" id="deleteBtn">Delete account</button>
+        </article>
+      </section>
+    </main>
+
+    <nav class="tabs">
+      <button data-view="today" class="on"><svg viewBox="0 0 24 24"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg><span>Today</span></button>
+      <button data-view="history"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span>History</span></button>
+      <button data-view="plan"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"/></svg><span>Plan</span></button>
+      <button data-view="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>Me</span></button>
+    </nav>
+  </div>
+
+  <div class="offline" id="offline" hidden>You're offline. Changes won't save until you reconnect.</div>
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
