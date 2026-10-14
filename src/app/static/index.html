@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d0f12">
-  <meta name="description" content="Track workouts, weight, protein, water, steps and sleep. Free fitness log that works on phone and computer.">
-  <title>Unforgedabble</title>
+  <meta name="description" content="ForgeTrack builds a workout and meal plan around your goal, body, food and budget, then tracks your days and shows your progress.">
+  <title>ForgeTrack</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Unforgedabble">
+  <meta name="apple-mobile-web-app-title" content="ForgeTrack">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -20,28 +20,72 @@
   <!-- ================= SIGN IN / SIGN UP ================= -->
   <section id="auth" class="auth" hidden>
     <div class="auth-card">
-      <div class="brand big"><span class="logo">U</span>Unforgedabble</div>
-      <p class="auth-tag">Your workouts, weight, protein, water, steps and sleep in one place. Free, on your phone and computer.</p>
+      <div class="brand big"><span class="logo">F</span>ForgeTrack</div>
+      <p class="auth-tag">Tell us your goal, body, food and budget. Get a plan built for you, then track every day and see your progress.</p>
+
+      <div id="socialBox" class="social" hidden>
+        <div id="googleBtn" class="google-btn"></div>
+        <div class="divider"><span>or use email</span></div>
+      </div>
+
       <div class="seg auth-seg">
         <button type="button" data-mode="login" class="on">Log in</button>
         <button type="button" data-mode="signup">Create account</button>
       </div>
       <form id="authForm" class="form" autocomplete="on">
-        <label class="signup-only"><em class="lt">Name</em><input name="name" autocomplete="name" maxlength="40" placeholder="Adam"></label>
+        <label class="signup-only"><em class="lt">Name</em><input name="name" autocomplete="given-name" maxlength="40" placeholder="Your first name"></label>
         <label><em class="lt">Email</em><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
         <label><em class="lt">Password <span class="signup-only">at least 8 characters</span></em>
           <input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
         <label class="signup-only" id="codeField" hidden><em class="lt">Invite code <span>ask the app owner</span></em><input name="code" autocomplete="off"></label>
+        <label class="check signup-only"><input type="checkbox" name="consent">
+          <span>I'm 16 or older and agree to the <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>, including ForgeTrack storing my health and fitness answers to build my plan.</span></label>
         <p class="auth-error" id="authError"></p>
         <button type="submit" class="primary full" id="authSubmit">Log in</button>
       </form>
+      <p class="legal-links"><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="delete-account.html">Delete account</a></p>
+    </div>
+  </section>
+
+  <!-- first Google sign-in: ask for consent before the account is made -->
+  <div class="modal" id="consentModal" hidden>
+    <div class="modal-card">
+      <h2>One last thing</h2>
+      <label class="check"><input type="checkbox" id="consentBox">
+        <span>I'm 16 or older and agree to the <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>, including ForgeTrack storing my health and fitness answers to build my plan.</span></label>
+      <div class="form-actions">
+        <button type="button" class="ghost" id="consentCancel">Cancel</button>
+        <button type="button" class="primary" id="consentOk">Create account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SETUP QUESTIONS ================= -->
+  <section id="onboard" class="onboard" hidden>
+    <div class="onboard-card">
+      <div class="onboard-top">
+        <div class="brand"><span class="logo">F</span>ForgeTrack</div>
+        <span class="muted" id="stepCount"></span>
+      </div>
+      <div class="progress"><span id="stepBar"></span></div>
+      <form id="stepForm" class="step" autocomplete="off" novalidate>
+        <h1 id="stepTitle"></h1>
+        <p class="muted" id="stepSub"></p>
+        <div id="stepBody" class="step-body"></div>
+        <p class="auth-error" id="stepError"></p>
+        <div class="form-actions">
+          <button type="button" class="ghost" id="stepBack">Back</button>
+          <button type="submit" class="primary" id="stepNext">Next</button>
+        </div>
+      </form>
+      <div id="planReady" class="step" hidden></div>
     </div>
   </section>
 
   <!-- ================= APP ================= -->
   <div id="app" hidden>
     <header class="top">
-      <div class="brand"><span class="logo">U</span>Unforgedabble</div>
+      <div class="brand"><span class="logo">F</span>ForgeTrack</div>
       <div class="datenav" id="datenav">
         <button id="prev" aria-label="Previous day">&#8249;</button>
         <label class="datepick"><span id="dateLabel"></span><input type="date" id="dateInput" aria-label="Pick a date"></label>
@@ -54,6 +98,17 @@
       <section id="view-today" class="view active">
         <div class="col-a">
           <p class="hello" id="hello"></p>
+          <button type="button" class="banner" id="reportBanner" hidden></button>
+
+          <article class="card">
+            <div class="form-head">
+              <h2>Today's tasks</h2>
+              <span class="pill" id="taskCount"></span>
+            </div>
+            <div class="taskbar"><span id="taskBar"></span></div>
+            <ul id="tasks" class="tasks"></ul>
+          </article>
+
           <article class="card hero" id="workoutCard">
             <div class="hero-head">
               <div>
@@ -85,6 +140,7 @@
           <div class="grid">
             <label><em class="lt">Weight <span>kg</span></em><input name="weight" type="number" step="0.1" inputmode="decimal" placeholder="–"></label>
             <label><em class="lt">Waist <span>cm · weekly</span></em><input name="waist" type="number" step="0.5" inputmode="decimal" placeholder="–"></label>
+            <label><em class="lt">Calories <span>kcal</span></em><input name="calories" type="number" inputmode="numeric" placeholder="0"></label>
             <label><em class="lt">Protein <span>g</span></em><input name="protein" type="number" inputmode="numeric" placeholder="0"></label>
             <label><em class="lt">Water <span>L</span></em><input name="water" type="number" step="0.25" inputmode="decimal" placeholder="0"></label>
             <label><em class="lt">Steps</em><input name="steps" type="number" inputmode="numeric" placeholder="0"></label>
@@ -99,6 +155,7 @@
           <label class="wide"><em class="lt">Note</em>
             <textarea name="note" rows="2" placeholder="How did today feel?"></textarea>
           </label>
+          <input type="hidden" name="done">
           <div class="form-actions">
             <button type="button" class="ghost danger" id="clearDay">Clear day</button>
             <button type="submit" class="primary">Save</button>
@@ -106,8 +163,11 @@
         </form>
       </section>
 
-      <!-- HISTORY -->
-      <section id="view-history" class="view">
+      <!-- PROGRESS -->
+      <section id="view-progress" class="view">
+        <h2 class="page-title">Progress</h2>
+        <div id="live"></div>
+        <div id="reports" class="stack"></div>
         <article class="card">
           <div class="form-head">
             <h2>Weight trend</h2>
@@ -124,14 +184,20 @@
       <!-- PLAN -->
       <section id="view-plan" class="view">
         <div class="plan-head">
-          <h2 class="page-title">Your plan</h2>
+          <div>
+            <h2 class="page-title">Your plan</h2>
+            <p class="muted" id="planGoal"></p>
+          </div>
           <button type="button" class="ghost-btn" id="editPlan">Edit plan</button>
         </div>
         <div id="planView" class="stack">
+          <article class="card" id="notesCard" hidden><h2>About your plan</h2><ul id="notes" class="rules"></ul></article>
           <article class="card"><h2>Daily targets</h2><div class="targets" id="targets"></div></article>
-          <article class="card"><h2>Weekly split</h2><div id="split" class="split"></div></article>
-          <article class="card"><h2>Menu</h2><div id="menu" class="menu"></div></article>
+          <article class="card"><h2>Weekly workouts</h2><div id="split" class="split"></div></article>
+          <article class="card"><h2>Meal plan</h2><div id="menu" class="menu"></div></article>
           <article class="card"><h2>Rules</h2><ul id="rules" class="rules"></ul></article>
+          <button type="button" class="ghost-btn" id="redoSetup">Answer the setup questions again</button>
+          <p class="disclaimer">ForgeTrack gives general fitness guidance, not medical advice. Check with a doctor before starting if you have a health condition, are pregnant, or have an injury.</p>
         </div>
         <form id="planEdit" class="stack" hidden>
           <article class="card">
@@ -139,18 +205,20 @@
             <div class="grid" id="targetInputs">
               <label><em class="lt">Calories <span>kcal</span></em><input name="calories" type="number" min="800" max="6000" required></label>
               <label><em class="lt">Protein <span>g</span></em><input name="protein" type="number" min="0" max="400" required></label>
+              <label><em class="lt">Carbs <span>g</span></em><input name="carbs" type="number" min="0" max="1000"></label>
+              <label><em class="lt">Fat <span>g</span></em><input name="fat" type="number" min="0" max="400"></label>
               <label><em class="lt">Water <span>L</span></em><input name="water" type="number" step="0.25" min="0.5" max="10" required></label>
               <label><em class="lt">Steps</em><input name="steps" type="number" min="0" max="50000" step="500" required></label>
               <label><em class="lt">Sleep <span>h</span></em><input name="sleep" type="number" step="0.25" min="3" max="14" required></label>
             </div>
           </article>
           <article class="card">
-            <h2>Weekly split</h2>
+            <h2>Weekly workouts</h2>
             <p class="hint">Name each day (call a day "Rest" for a rest day). One exercise per line.</p>
             <div id="splitInputs" class="split-edit"></div>
           </article>
           <article class="card">
-            <h2>Menu</h2>
+            <h2>Meal plan</h2>
             <div id="menuInputs" class="menu-edit"></div>
             <button type="button" class="ghost-btn" id="addMeal">+ Add meal</button>
           </article>
@@ -178,11 +246,17 @@
         </form>
 
         <article class="card">
+          <h2>Notifications</h2>
+          <p class="muted" id="notifyText">Get told when your weekly and monthly progress reports are ready.</p>
+          <button type="button" class="primary" id="notifyBtn">Turn on notifications</button>
+        </article>
+
+        <article class="card">
           <h2>Install the app</h2>
           <div id="installBox" class="install">
-            <button type="button" class="primary" id="installBtn" hidden>Install Unforgedabble</button>
+            <button type="button" class="primary" id="installBtn" hidden>Install ForgeTrack</button>
             <ul class="rules">
-              <li><b>Android (Chrome):</b> menu ⋮ → <i>Add to Home screen</i> / <i>Install app</i></li>
+              <li><b>Android (Chrome):</b> menu ⋮ → <i>Install app</i></li>
               <li><b>iPhone (Safari):</b> Share button → <i>Add to Home Screen</i></li>
               <li><b>Computer (Chrome / Edge):</b> install icon at the right end of the address bar</li>
             </ul>
@@ -191,12 +265,22 @@
 
         <article class="card backup">
           <div>
-            <h2>Backup</h2>
-            <p class="muted">Download all your records as one file. Keep it in Google Drive, or use it to move your log to another Unforgedabble (laptop ↔ cloud).</p>
+            <h2>Your data</h2>
+            <p class="muted">Download all your records as one file, or restore them from a file.</p>
           </div>
           <div class="backup-actions">
-            <button type="button" class="primary" id="exportBtn">Download backup</button>
+            <button type="button" class="primary" id="exportBtn">Download my data</button>
             <label class="ghost-btn">Restore from file<input type="file" id="importFile" accept=".json,application/json" hidden></label>
+          </div>
+        </article>
+
+        <article class="card backup" id="ownerCard" hidden>
+          <div>
+            <h2>Owner tools</h2>
+            <p class="muted" id="ownerText">Every user's setup answers and daily logs, for analysis.</p>
+          </div>
+          <div class="backup-actions">
+            <button type="button" class="primary" id="ownerCsv">Download all users (CSV)</button>
           </div>
         </article>
 
@@ -204,12 +288,13 @@
           <button type="button" class="ghost-btn" id="logoutBtn">Log out</button>
           <button type="button" class="ghost danger" id="deleteBtn">Delete account</button>
         </article>
+        <p class="legal-links"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms</a> · <a href="delete-account.html">Account deletion</a></p>
       </section>
     </main>
 
     <nav class="tabs">
       <button data-view="today" class="on"><svg viewBox="0 0 24 24"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg><span>Today</span></button>
-      <button data-view="history"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span>History</span></button>
+      <button data-view="progress"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span>Progress</span><i class="badge" id="tabBadge" hidden></i></button>
       <button data-view="plan"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"/></svg><span>Plan</span></button>
       <button data-view="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>Me</span></button>
     </nav>
@@ -218,5 +303,6 @@
   <div class="offline" id="offline" hidden>You're offline. Changes won't save until you reconnect.</div>
   <div class="toast" id="toast"></div>
   <script src="app.js"></script>
+  <script src="onboarding.js"></script>
 </body>
 </html>

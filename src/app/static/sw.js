@@ -1,7 +1,7 @@
-// Service worker: lets Unforgedabble install like an app and open even with no internet.
+// Service worker: lets ForgeTrack install like an app, open with no internet, and show notifications.
 // Your records are never cached here; they always come from the server.
-const CACHE = "fitlog-v3";
-const SHELL = ["./", "index.html", "styles.css", "app.js", "manifest.json", "icons/icon.svg", "icons/icon-192.png"];
+const CACHE = "forgetrack-v4";
+const SHELL = ["./", "index.html", "styles.css", "app.js", "onboarding.js", "manifest.json", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -27,5 +27,16 @@ self.addEventListener("fetch", (e) => {
         return res;
       })
       .catch(() => caches.match(e.request).then((hit) => hit || caches.match("index.html")))
+  );
+});
+
+// Tapping a notification opens (or focuses) the app
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => "focus" in c);
+      return open ? open.focus() : self.clients.openWindow("./");
+    })
   );
 });

@@ -1,0 +1,15 @@
+:root { --bg: #0d0f12; --card: #161a20; --line: #262c36; --text: #eef1f5; --muted: #8b95a5; --lime: #c8f560; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 Inter, system-ui, sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 28px 16px 60px; }
+.brand { display: flex; align-items: center; gap: 8px; font: 700 20px "Space Grotesk", Inter, sans-serif; color: var(--text); text-decoration: none; }
+.logo { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--lime); color: #111; }
+h1 { font-family: "Space Grotesk", Inter, sans-serif; font-size: 30px; margin: 28px 0 4px; line-height: 1.2; }
+h2 { font-size: 18px; margin: 28px 0 6px; }
+p, li { color: #d3d9e2; }
+.muted { color: var(--muted); }
+a { color: var(--lime); }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin: 18px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; }

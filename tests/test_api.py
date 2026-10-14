@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 def make_client(monkeypatch, db_path):
     monkeypatch.setenv("DB_PATH", str(db_path))
-    for var in ("TABLE_NAME", "SECRET_KEY", "SIGNUP_CODE"):
+    for var in ("TABLE_NAME", "SECRET_KEY", "SIGNUP_CODE", "GOOGLE_CLIENT_ID", "ADMIN_EMAILS", "ANDROID_PACKAGE"):
         monkeypatch.delenv(var, raising=False)
     import app.main
 
@@ -29,7 +29,7 @@ def client(tmp_path, monkeypatch):
 
 
 def signup(client, email="adam@example.com", name="Adam", password="strongpass1", **extra):
-    r = client.post("/api/auth/signup", json={"name": name, "email": email, "password": password, **extra})
+    r = client.post("/api/auth/signup", json={"name": name, "email": email, "password": password, "consent": True, **extra})
     assert r.status_code == 200, r.text
     return {"Authorization": f"Bearer {r.json()['token']}"}
 
@@ -42,16 +42,19 @@ def test_signup_login_and_me(client):
     assert me["name"] == "Adam" and me["email"] == "adam@example.com"
     assert "password_hash" not in me
     assert me["settings"]["split"][0]["name"] == "Push"
+    assert me["onboarded"] is False and me["provider"] == "email" and me["is_admin"] is False
 
 
 def test_bad_logins_and_duplicates(client):
     signup(client)
     assert client.post("/api/auth/login", json={"email": "adam@example.com", "password": "wrong-pass"}).status_code == 401
     assert client.post("/api/auth/login", json={"email": "nobody@example.com", "password": "strongpass1"}).status_code == 401
-    r = client.post("/api/auth/signup", json={"name": "A", "email": "adam@example.com", "password": "strongpass1"})
+    r = client.post("/api/auth/signup", json={"name": "A", "email": "adam@example.com", "password": "strongpass1", "consent": True})
     assert r.status_code == 409
     assert client.post("/api/auth/signup", json={"name": "B", "email": "b@example.com", "password": "short"}).status_code == 422
     assert client.post("/api/auth/signup", json={"name": "B", "email": "not-an-email", "password": "longenough"}).status_code == 400
+    no_consent = client.post("/api/auth/signup", json={"name": "C", "email": "c@example.com", "password": "longenough"})
+    assert no_consent.status_code == 400 and "Terms" in no_consent.json()["detail"]
 
 
 def test_everything_private_needs_login(client):
@@ -76,8 +79,8 @@ def test_users_only_see_their_own_records(client):
 
 def test_invite_code(client, monkeypatch):
     monkeypatch.setenv("SIGNUP_CODE", "gym2026")
-    assert client.get("/api/config").json() == {"signup_code_required": True}
-    r = client.post("/api/auth/signup", json={"name": "X", "email": "x@example.com", "password": "longenough"})
+    assert client.get("/api/config").json()["signup_code_required"] is True
+    r = client.post("/api/auth/signup", json={"name": "X", "email": "x@example.com", "password": "longenough", "consent": True})
     assert r.status_code == 403
     signup(client, email="x@example.com", code="gym2026")
 
@@ -156,7 +159,9 @@ def test_old_database_is_upgraded_and_given_to_first_account(tmp_path, monkeypat
 
 
 def test_web_app_is_served(client):
-    assert "Unforgedabble" in client.get("/").text
+    assert "ForgeTrack" in client.get("/").text
+    for page in ("/privacy.html", "/terms.html", "/delete-account.html"):
+        assert client.get(page).status_code == 200, page
     assert client.get("/manifest.json").json()["display"] == "standalone"
     assert client.get("/sw.js").status_code == 200
 

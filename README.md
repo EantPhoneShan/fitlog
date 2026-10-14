@@ -1,20 +1,27 @@
-# Unforgedabble
+# ForgeTrack
 
-Fitness tracker web app (the AWS resources keep the short code name `fitlog`).
+A fitness app that builds a plan around **you**, then tracks your days and shows your progress.
+It works on phones (installable like a normal app, ready to wrap for Google Play) and on computers.
+The AWS resources keep the short code name `fitlog`.
 
-A fitness tracker web app with accounts. It works on phones (installable like a normal app) and
-on computers, and each person gets their own private log and their own editable plan.
-
-- **Today**: today's workout from your split, 7-day average weight, weekly change, streak,
-  progress rings for protein / water / steps / sleep with one-tap "+" buttons, and the daily log
-  (weight, waist, lifts, notes). It saves by itself as you type.
-- **History**: weight chart (daily dots + 7-day average line) and every logged day.
-- **Plan**: your targets, weekly split and menu. Tap **Edit plan** to change any of it.
-- **Me**: profile, install instructions, backup / restore, log out, delete account.
-- **Accounts**: sign up with email + password. An optional invite code keeps sign-ups closed
-  until you publish.
-- **Installable (PWA)**: Android, iPhone, Windows, Mac. Opens even with no internet.
-
+- **Sign in** with Google or email. Consent tick box, 16+ only.
+- **Setup questions** (7 short steps): goal (lose fat, build muscle, bodybuilder, strength, recomp,
+  fitness, maintain), sex, age, height, weight, target + timeframe, activity, sleep, experience,
+  training days and minutes, equipment, injuries, diet (halal, vegetarian, vegan…), allergies,
+  dislikes, meals a day, cooking, food budget.
+- **Personal plan** (`src/app/planner.py`): calories (Mifflin-St Jeor), protein / carbs / fat,
+  a weekly workout split for their days and equipment, a meal plan that respects diet, allergies,
+  budget and cooking, and rules. Unrealistic targets get a warning and a safe pace.
+- **Today**: a checklist of today's tasks (workout, each meal, protein, water, steps, sleep), the
+  workout, stats, progress rings and the daily log. It saves as you type.
+- **Progress**: reports after week 1 and every 30 days ("you lost 1.8 kg, trained 11 of 12
+  sessions, hit protein on 24 of 30 days" + advice). Users get a notification, and reports stay until they delete them.
+  Also live numbers for the current month, the weight chart and every logged day.
+- **Plan**: targets, workouts, meals, rules. Edit anything, or answer the questions again.
+- **Me**: profile, notifications, install, download / restore data, log out, delete account.
+- **Owner tools**: emails in `ADMIN_EMAILS` can download every user's answers and logs as CSV.
+- **Google Play ready**: privacy policy, terms, account deletion page, Android app link.
+  See **[docs/PLAY_STORE.md](docs/PLAY_STORE.md)**.
 | Phone | Plan | Computer |
 |---|---|---|
 | ![](docs/m-today.png) | ![](docs/m-plan.png) | ![](docs/d-today.png) |
@@ -201,9 +208,12 @@ fitness-app/
 │       ├── main.py        the API
 │       ├── auth.py        password hashing + log-in tokens
 │       ├── storage.py     SQLite (laptop) and DynamoDB (cloud) storage
-│       ├── plan.py        the starting plan every new account gets
-│       └── static/        index.html, styles.css, app.js, sw.js, manifest.json, icons/
-├── tests/test_api.py      automatic tests (13)
+│       ├── plan.py        placeholder plan until the setup questions are answered
+│       ├── planner.py     setup answers -> calories, macros, workouts, meals, rules
+│       ├── insights.py    weekly / monthly progress reports
+│       └── static/        index.html, app.js, onboarding.js, styles.css, sw.js, manifest.json,
+│                          privacy.html, terms.html, delete-account.html, icons/
+├── tests/                 automatic tests (23): test_api.py, test_plan.py
 ├── data/                  your local database file goes here
-└── docs/                  STEP_BY_STEP.md guide + screenshots
+└── docs/                  STEP_BY_STEP.md, PLAY_STORE.md + screenshots
 ```

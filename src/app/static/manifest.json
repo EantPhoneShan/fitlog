@@ -1,7 +1,9 @@
 {
-  "name": "Unforgedabble",
-  "short_name": "Unforgedabble",
-  "description": "Track workouts, weight, protein, water, steps and sleep.",
+  "name": "ForgeTrack",
+  "short_name": "ForgeTrack",
+  "id": "/",
+  "description": "A workout and meal plan built around your goal, food and budget, with daily tasks and monthly progress reports.",
+  "categories": ["health", "fitness", "lifestyle"],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

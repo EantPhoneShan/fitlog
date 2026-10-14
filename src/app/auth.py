@@ -14,6 +14,8 @@ import json
 import os
 import secrets
 import time
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 ITERATIONS = 200_000
@@ -39,6 +41,9 @@ def hash_password(password: str) -> str:
 
 
 def check_password(password: str, stored: str) -> bool:
+    if not stored:  # accounts made with Google have no password
+        hash_password(password)  # same work either way, so timing gives nothing away
+        return False
     _, iterations, salt, digest = stored.split("$")
     test = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), int(iterations))
     return hmac.compare_digest(test.hex(), digest)
@@ -70,3 +75,25 @@ def read_token(token: str) -> dict | None:
         return payload if payload["exp"] > time.time() else None
     except (ValueError, KeyError):
         return None
+
+
+GOOGLE_ISSUERS = ("accounts.google.com", "https://accounts.google.com")
+
+
+def verify_google(credential: str, client_id: str) -> dict | None:
+    """Checks a "Sign in with Google" ID token with Google and returns its claims, or None.
+
+    Google's tokeninfo endpoint verifies the signature and expiry for us; we then make sure
+    the token was issued to *this* app (aud) and that Google has verified the email.
+    """
+    url = "https://oauth2.googleapis.com/tokeninfo?" + urllib.parse.urlencode({"id_token": credential})
+    try:
+        with urllib.request.urlopen(url, timeout=5) as res:
+            claims = json.loads(res.read())
+    except (OSError, ValueError):
+        return None
+    if claims.get("aud") != client_id or claims.get("iss") not in GOOGLE_ISSUERS:
+        return None
+    if str(claims.get("email_verified")).lower() != "true" or int(claims.get("exp", 0)) < time.time():
+        return None
+    return claims

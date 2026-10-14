@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: Unforgedabble - fitness tracker web app with accounts (Lambda + DynamoDB, free tier)
+Description: ForgeTrack - personal workout and meal plans with daily tracking (Lambda + DynamoDB, free tier)
 
 Parameters:
   SecretKey:
@@ -16,6 +16,26 @@ Parameters:
   AlertEmail:
     Type: String
     Description: Email that gets a warning if AWS charges go above 1 USD in a month
+  AdminEmails:
+    Type: String
+    Default: ""
+    Description: Comma-separated emails of app owners who can download every user's data
+  GoogleClientId:
+    Type: String
+    Default: ""
+    Description: OAuth web client ID for "Continue with Google" (empty hides the button)
+  ContactEmail:
+    Type: String
+    Default: ""
+    Description: Support email shown on the privacy, terms and account deletion pages
+  AndroidPackage:
+    Type: String
+    Default: ""
+    Description: Play Store package name (e.g. com.forgetrack.app), for the Android app link
+  AndroidCertSha256:
+    Type: String
+    Default: ""
+    Description: SHA-256 fingerprint(s) of the Play app signing key, comma-separated
 
 Resources:
   # The database: one item per day, key = user + date
@@ -63,6 +83,11 @@ Resources:
           USERS_TABLE: !Ref UsersTable
           SECRET_KEY: !Ref SecretKey
           SIGNUP_CODE: !Ref SignupCode
+          ADMIN_EMAILS: !Ref AdminEmails
+          GOOGLE_CLIENT_ID: !Ref GoogleClientId
+          CONTACT_EMAIL: !Ref ContactEmail
+          ANDROID_PACKAGE: !Ref AndroidPackage
+          ANDROID_CERT_SHA256: !Ref AndroidCertSha256
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref DaysTable

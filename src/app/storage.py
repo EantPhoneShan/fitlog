@@ -27,6 +27,8 @@ FIELDS = {
     "waist": float,  # cm
     "lifts": str,  # free text, e.g. "Incline DB 22.5 kg x 10,9,8"
     "note": str,
+    "calories": int,  # kcal eaten
+    "done": str,  # ticked daily tasks, comma separated ids, e.g. "workout,meal-0,meal-1"
 }
 
 # Records saved before accounts existed belong to this placeholder user.
@@ -48,8 +50,12 @@ class SqliteStore:
                 f"CREATE TABLE IF NOT EXISTS days (user_id TEXT NOT NULL, date TEXT NOT NULL, {cols}, "
                 "PRIMARY KEY (user_id, date))"
             )
+            have = [c["name"] for c in db.execute("PRAGMA table_info(days)").fetchall()]
+            for name, t in FIELDS.items():  # columns added in later versions
+                if name not in have:
+                    db.execute(f"ALTER TABLE days ADD COLUMN {name} {'TEXT' if t is str else 'REAL'}")
             if old and "user_id" not in [c["name"] for c in old]:
-                names = ", ".join(FIELDS)
+                names = ", ".join(n for n in FIELDS if n in [c["name"] for c in old])
                 db.execute(f"INSERT INTO days (user_id, date, {names}) SELECT ?, date, {names} FROM days_v1", (LEGACY_USER,))
                 db.execute("DROP TABLE days_v1")
             db.execute(
@@ -91,6 +97,10 @@ class SqliteStore:
     def count_users(self) -> int:
         with self._connect() as db:
             return db.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+
+    def list_users(self) -> list[dict]:
+        with self._connect() as db:
+            return [self._user(r) for r in db.execute("SELECT * FROM users ORDER BY created").fetchall()]
 
     def delete_user(self, user: dict) -> None:
         with self._connect() as db:
@@ -173,6 +183,16 @@ class DynamoStore:
 
     def count_users(self) -> int:
         return self.users.scan(Select="COUNT", Limit=2).get("Count", 0)
+
+    def list_users(self) -> list[dict]:
+        items, kwargs = [], {}
+        while True:
+            page = self.users.scan(**kwargs)
+            items += page["Items"]
+            if "LastEvaluatedKey" not in page:
+                break
+            kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+        return sorted((self._user(i) for i in items), key=lambda u: u["created"])
 
     def delete_user(self, user: dict) -> None:
         for day in self.list(user["id"], "0000-01-01", "9999-12-31"):
