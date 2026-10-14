@@ -156,7 +156,7 @@ def test_old_database_is_upgraded_and_given_to_first_account(tmp_path, monkeypat
 
 
 def test_web_app_is_served(client):
-    assert "FitLog" in client.get("/").text
+    assert "Unforgedabble" in client.get("/").text
     assert client.get("/manifest.json").json()["display"] == "standalone"
     assert client.get("/sw.js").status_code == 200
 

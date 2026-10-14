@@ -1,6 +1,6 @@
-// Service worker: lets FitLog install like an app and open even with no internet.
+// Service worker: lets Unforgedabble install like an app and open even with no internet.
 // Your records are never cached here; they always come from the server.
-const CACHE = "fitlog-v2";
+const CACHE = "fitlog-v3";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "manifest.json", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {

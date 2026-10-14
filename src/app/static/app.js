@@ -1,4 +1,4 @@
-// FitLog front end: plain JavaScript, no framework. Talks to the Python API under /api.
+// Unforgedabble front end: plain JavaScript, no framework. Talks to the Python API under /api.
 
 const $ = (sel) => document.querySelector(sel);
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -48,7 +48,7 @@ async function api(path, options = {}) {
   try {
     res = await fetch(path, { ...options, headers });
   } catch {
-    const err = new Error("Can't reach FitLog. Check your internet.");
+    const err = new Error("Can't reach Unforgedabble. Check your internet.");
     err.offline = true;
     throw err;
   }
@@ -463,7 +463,7 @@ $("#exportBtn").addEventListener("click", async () => {
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `fitlog-backup-${isoDate(new Date())}.json`;
+    link.download = `unforgedabble-backup-${isoDate(new Date())}.json`;
     link.click();
     URL.revokeObjectURL(link.href);
     toast(`Downloaded ${backup.days.length} days`);
@@ -481,9 +481,9 @@ $("#importFile").addEventListener("change", async (e) => {
     try {
       backup = JSON.parse(await file.text());
     } catch {
-      throw new Error("That file is not a FitLog backup");
+      throw new Error("That file is not an Unforgedabble backup");
     }
-    if (!Array.isArray(backup.days)) throw new Error("That file is not a FitLog backup");
+    if (!Array.isArray(backup.days)) throw new Error("That file is not an Unforgedabble backup");
     if (!confirm(`Restore ${backup.days.length} days? Days with the same date are replaced.`)) return;
     const res = await api("/api/import", { method: "POST", body: JSON.stringify({ days: backup.days }) });
     toast(`Restored ${res.imported} days`);

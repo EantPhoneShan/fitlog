@@ -1,4 +1,4 @@
-"""FitLog API: the "backend" of the app.
+"""Unforgedabble API: the "backend" of the app.
 
 Run locally (from the src folder):   uvicorn app.main:app --reload
 Then open http://127.0.0.1:8000 in your browser. API docs: http://127.0.0.1:8000/docs
@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from . import auth, plan
 from .storage import get_store
 
-app = FastAPI(title="FitLog API", version="2.0")
+app = FastAPI(title="Unforgedabble API", version="2.0")
 store = get_store()
 
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

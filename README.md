@@ -1,4 +1,6 @@
-# FitLog
+# Unforgedabble
+
+Fitness tracker web app (the AWS resources keep the short code name `fitlog`).
 
 A fitness tracker web app with accounts. It works on phones (installable like a normal app) and
 on computers, and each person gets their own private log and their own editable plan.
